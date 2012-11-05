@@ -1,6 +1,8 @@
 (ns leonardo.bot
   (:require [irclj.core :as ircb]
             [irclj.events :as irce]
+            [irclj.connection :as conn]
+            [clojure.string :as string]
             [leonardo.message-scorer :as s]
             [leonardo.message-classifier :as c]
             [leonardo.users :as u]))
@@ -28,6 +30,29 @@
         (u/incr-points nick score)
         (incr-reasons nick reasons))))
 
+(defn points-command
+  [irc m args]
+  (let [nick (:nick m)
+        points (u/get-points users nick)
+        message (str nick " has " points " points.")]
+    (conn/write-irc-line irc "NOTICE" nick (conn/end message))))
+
+(def commands
+  {:ping (fn [irc m args] (ircb/reply irc m "Pong."))
+   :points points-command})
+
+(defn handle-command
+  [irc m]
+  (let [parts (string/split (:text m) #" ")
+        command (first parts)
+        args (rest parts)]
+    (when (= \@ (get command 0))
+      (let [command-name (subs command 1)
+            command-keyword (keyword command-name)
+            function (command-keyword commands)]
+        (when function
+          (function irc m args))))))
+
 (defn privmsg
   [irc m]
   (let [message (:text m)
@@ -36,7 +61,7 @@
         reasons (c/classify-sentence message)]
     (dosync
      (alter users score-message m))
-    (println @users)))
+    (handle-command irc m)))
 
 (defn make-bot
   []
