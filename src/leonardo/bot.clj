@@ -31,7 +31,6 @@
         score (s/score-sentence message)
         reasons (c/classify-sentence message)]
     (-> users
-        (u/add-user nick)
         (u/incr-points nick score)
         (u/incr-reasons nick reasons)
         (notify-maybe irc m reasons score))))
@@ -118,9 +117,10 @@
         nick (:nick m)
         score (s/score-sentence message)
         reasons (c/classify-sentence message)]
-    (dosync
-     (alter users-ref score-message irc m))
-    (handle-command irc m)))
+    (dosync (alter users-ref u/add-user nick))
+    (if (= \@ (get message 0))
+      (handle-command irc m)
+      (dosync (alter users-ref score-message irc m)))))
 
 (defn make-bot
   []
