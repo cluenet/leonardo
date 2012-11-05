@@ -6,11 +6,29 @@
 (defn- sentence-type
   ([sentence]
      (cond
-      (re-matches clueful-regex sentence) :clueful
-      (re-matches normal-regex sentence) :normal
+      (re-find clueful-regex sentence) :clueful
+      (re-find normal-regex sentence) :normal
       :else :abnormal)))
+
+(def sentence-classifiers
+  {:personal-pronoun #"(^| )i( |$)"
+   :uncreative-profanity #"(?i:\b(?:crap|cunt|fuck|shit)\b)"
+   :all-caps #"^[^a-z]{8,}$"
+   :profanity #"\<censored\>"
+   :lawl #"(^| )lawl( |$)"
+   :rawr #"(^| )rawr( |$)"
+   :no-wovels #"(?i:^[^aeiouy]+$)"
+   :r-u #"(?i:(^| )[ru]( |$))"})
+
+(defn- sentence-classifiers-for-sentence
+  [sentence]
+  (keys (filter
+         (fn [[_ regex]] (re-find regex sentence))
+         sentence-classifiers)))
 
 (defn classify-sentence
   ([sentence]
-     (conj #{} (sentence-type sentence))))
+     (conj
+      (set (sentence-classifiers-for-sentence sentence))
+      (sentence-type sentence))))
 
