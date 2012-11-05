@@ -9,6 +9,9 @@
   (let [users (add-user users "johndoe")]
     (is (= 0 (get-points users "johndoe")))))
 
+(deftest get-points-nouser-test
+  (is (= 0 (get-points (init-users) "johndoe"))))
+
 (deftest set-points-test
   (let [users (-> users
                   (add-user "johndoe")

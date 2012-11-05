@@ -11,7 +11,7 @@
    :profanity -20
    :lawl -20
    :rawr -20
-   :no-wovels -30
+   :no-vowels -30
    :r-u -40})
 
 (defn score-sentence

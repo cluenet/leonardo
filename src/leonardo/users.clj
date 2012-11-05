@@ -1,9 +1,12 @@
 (ns leonardo.users)
 
-(defn init-users
-  [] {})
+(defn init-users [] {})
 
-(defn add-user
+(defn user-exists?
+  [users username]
+  (contains? users username))
+
+(defn reset-user
   [users username]
   (conj users
         {username
@@ -11,9 +14,15 @@
           :reasons {}
           :flags #{}}}))
 
+(defn add-user
+  [users username]
+  (if (user-exists? users username)
+    users
+    (reset-user users username)))
+
 (defn get-points
   [users username]
-  (:points (users username)))
+  (or (:points (users username)) 0))
 
 (defn set-points
   [users username points]
@@ -34,15 +43,19 @@
   (update-in (create-reason users username reason)
              [username :reasons reason] inc))
 
+(defn incr-reasons
+  [users username reasons]
+  (reduce #(incr-reason %1 username %2) users reasons))
+
 (defn reason-count
   [users username reason]
   (reason (:reasons (users username))))
 
-(defn- enable-flag
+(defn enable-flag
   [users username flag]
   (update-in users [username :flags] conj flag))
 
-(defn- disable-flag
+(defn disable-flag
   [users username flag]
   (update-in users [username :flags] disj flag))
 
